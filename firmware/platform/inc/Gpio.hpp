@@ -62,12 +62,12 @@ class GpioOut: public Gpio {
 
 /*****************************************************************************/
 
-//class GpioSpi: public Gpio {
-//	public:
-//		GpioSpi();
-//		void enable(GpioConfig& config);
-//		void disable();
-//};
+class GpioSpi: public Gpio {
+	public:
+		GpioSpi();
+		void enable(GpioConfig& config);
+		void disable();
+};
 
 
 #endif /* GPIO_HPP_ */

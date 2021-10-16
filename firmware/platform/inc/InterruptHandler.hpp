@@ -78,7 +78,7 @@ private:
 	static Spi* SPI1_interruptVector_;
 	static Spi* SPI2_interruptVector_;
 	static Spi* SPI3_interruptVector_;
-	//	static void SPI_InterruptHandler(uint32_t base, Spi* vector);
+	static void SPI_InterruptHandler(uint32_t base, Spi* vector);
 };
 
 #endif /* INTERRUPT_HANDLER_HPP_ */
