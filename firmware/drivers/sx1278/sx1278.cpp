@@ -6,7 +6,8 @@
 #include "sx1278_regs.h"
 #include "sx1278_conf.h"
 
-#include "BoardImplementation.hpp"
+#include "../src/host/hardware_timer/include/hardware/timer.h"
+
 
 #include "platform_types.h"
 
@@ -86,60 +87,21 @@ sx1278::sx1278() {
 }
 
 
-void sx1278::enable(Spi *spi, GpioOut *pwr, GpioOut *rst, GpioOut *cs,
-    GpioIn *irq) {
-
-
-  rxLORAInit_ = nullptr;
-  rxLORADone_ = nullptr;
-  txLORAInit_ = nullptr;
-  txLORADone_ = nullptr;
+void sx1278::enable(spi_inst_t *spi, GpioIn *irq) {
   
 
   rfLORA_irqm = 0;
   bbc1_irqm = 0;
 
-  dma_ = false;
 
-  cs_ = cs;
   spi_ = spi;
-  pwr_ = pwr;
-  rst_ = rst;
-  irq_ = irq;
 
+
+  irq_ = irq;
 
   off();
 
-
   irq_->setCallback(&callback_);
-}
-
-void sx1278::on(void) {
-  /* While on, all pins are high and wait */
-  cs_->high();
-  rst_->high();
-  pwr_->high();
-
-  board.delayMilliseconds(sx1278_DELAY_MS);
-}
-
-void sx1278::off(void) {
-  /* While off, all pins are low */
-  cs_->low();
-  rst_->low();
-  pwr_->low();
-
-  board.delayMilliseconds(sx1278_DELAY_MS);
-}
-
-void sx1278::hardReset(void) {
-
-  rst_->low();
-  board.delayMilliseconds(sx1278_DELAY_MS);
-
-
-  rst_->high();
-  board.delayMilliseconds(sx1278_DELAY_MS);
 }
 
 void sx1278::softReset(RadioCore rc) {
@@ -700,13 +662,8 @@ void sx1278::singleAccessRead(uint16_t address, uint8_t *value) {
   spi_tx_transaction[2] = 0x00;
 
   
-  cs_->low();
 
-  
-  spi_->rwByte(spi_tx_transaction, 3, spi_rx_transaction, 3, dma_);
-
-  
-  cs_->high();
+  spi_->spi_write_read_blocking(spi_tx_transaction, spi_rx_transaction, sizeof(spi_rx_transaction));
 
   
   *value = spi_rx_transaction[2];
@@ -725,15 +682,10 @@ void sx1278::singleAccessWrite(uint16_t address, uint8_t value) {
   spi_tx_transaction[0] = WRITE_CMD | address_hi;
   spi_tx_transaction[1] = address_lo;
   spi_tx_transaction[2] = value;
-
   
-  cs_->low();
-
+  spi_->spi_write_read_blocking(spi_tx_transaction, spi_rx_transaction, sizeof(spi_rx_transaction));
   
-  spi_->rwByte(spi_tx_transaction, 3, spi_rx_transaction, 3, dma_);
 
-
-  cs_->high();
 }
 
 void sx1278::blockAccessRead(uint16_t address, uint8_t *values,
@@ -751,16 +703,8 @@ void sx1278::blockAccessRead(uint16_t address, uint8_t *values,
   spi_tx_transaction[1] = address_lo;
 
 
-  cs_->low();
+  spi_->spi_write_read_blocking(spi_tx_transaction, spi_rx_transaction, sizeof(spi_rx_transaction));
 
-
-  spi_->rwByte(spi_tx_transaction, 2, spi_rx_transaction, 2, dma_);
-
-
-  spi_->rwByte(NULL, 0, values, length, dma_);
-
-
-  cs_->high();
 }
 
 void sx1278::blockAccessWrite(uint16_t address, uint8_t *values,
@@ -778,16 +722,7 @@ void sx1278::blockAccessWrite(uint16_t address, uint8_t *values,
   spi_tx_transaction[1] = address_lo;
 
 
-  cs_->low();
-
-
-  spi_->rwByte(spi_tx_transaction, 2, spi_rx_transaction, 2, dma_);
-
-
-  spi_->rwByte(values, length, NULL, 0, dma_);
-
-
-  cs_->high();
+  spi_->spi_write_read_blocking(spi_tx_transaction, spi_rx_transaction, sizeof(spi_rx_transaction));
 }
 
 inline uint16_t sx1278::getCORERegisterAddress(RadioCore rc) {

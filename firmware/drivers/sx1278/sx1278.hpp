@@ -4,9 +4,8 @@
 #include "sx1278_regs.h"
 #include "sx1278_conf.h"
 #include "inc/platform_defines.h"
-#include "Gpio.hpp"
-#include "Spi.hpp"
-//#include "Callback.hpp"
+#include "src/rp2_common/hardware_spi/include/hardware/spi.h"
+#include "src/rp2040/hardware_structs/include/hardware/structs/spi.h"
 
 class sx1278
 {
@@ -61,7 +60,7 @@ typedef enum
 
 public:
   sx1278();
-  void enable(Spi* spi, GpioOut* pwr, GpioOut* rst, GpioOut* cs, GpioIn* irq);
+  void enable(GpioOut* pwr, GpioOut* rst, GpioIn* irq);
   
   void on(void);
   void off(void);
@@ -118,26 +117,14 @@ private:
   void enableBitFromRegister(uint16_t address, uint32_t mask);
   void disableBitFromRegister(uint16_t address, uint32_t mask);
 private:
-  Spi* spi_;
-  
-  GpioOut* pwr_;
-  GpioOut* rst_;
-  GpioOut* cs_;
-  GpioIn* irq_;
 
-  GenericCallback<sx1278> callback_;
-
-  Callback* rxLORAInit_;
-  Callback* rxLORADone_;
-  Callback* txLORAInit_;
-  Callback* txLORADone_;
+  spi_inst_t spi_;
 
   uint8_t rfLORA_irqm;
   uint8_t bbc0_irqm, bbc1_irqm;
 
   uint8_t crc_length;
   
-  bool dma_;
 };
 
 #endif /* SX1278_HPP_ */
